@@ -52,10 +52,15 @@
         nav a {
             color: #ffffff;
             margin: 0 10px;
+            padding: 10px 15px;
             text-decoration: none;
+            font-size: 18px;
+            border-radius: 5px;
+            transition: background-color 0.3s, transform 0.3s;
         }
         nav a:hover {
-            text-decoration: underline;
+            background-color: #008c7a;
+            transform: scale(1.1);
         }
         .container {
             width: 80%;
@@ -66,6 +71,7 @@
             border-radius: 10px;
             margin-top: 100px; /* Adjusted to accommodate the fixed nav bar */
             display: none;
+            animation: fadeIn 0.5s ease-in-out;
         }
         .tools {
             display: flex;
@@ -87,13 +93,9 @@
         .tool:hover {
             transform: scale(1.05);
         }
-        .tool img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 5px;
-        }
         .tool h3 {
             margin-top: 10px;
+            color: #000000;
         }
         .inputs {
             display: flex;
@@ -104,19 +106,41 @@
             display: flex;
             gap: 10px;
         }
-        .input-group input {
+        .input-group input, .input-group select {
             flex: 1;
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #cccccc;
         }
-        .input-group button {
+        .input-group label, .input-group button {
             padding: 10px 20px;
             border-radius: 5px;
             border: none;
             background-color: #00baad;
             color: white;
             cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .input-group label:hover, .input-group button:hover {
+            background-color: #008c7a;
+            transform: scale(1.05);
+        }
+        .file-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-input {
+            display: none;
+        }
+        .file-name {
+            flex: 1;
+            font-size: 14px;
+            color: #555555;
+            padding: 10px;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+            background-color: #ffffff;
         }
         .output {
             margin-top: 20px;
@@ -131,16 +155,29 @@
                 flex: 1 1 100%;
             }
         }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        /* New CSS for file inputs */
+        .file-input-wrapper label {
+            height: 23px; 
+            width:200px;
+        }
+        .file-input-wrapper label:hover {
+            background-color: #008c7a;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
-    <div class="author">
+    <div class="author" id="author">
         <h2>作者: 深海中隐居的CX</h2>
         <p>FloaOS实用工具</p>
     </div>
     <nav>
         <a href="#" onclick="showTool('tool1')">安装程序</a>
-        <a href="#" onclick="showTool('tool2')">工具 2</a>
+        <a href="#" onclick="showTool('tool2')">离线安装</a>
         <a href="#" onclick="showTool('tool3')">工具 3</a>
     </nav>
     <div id="tool1" class="container">
@@ -168,21 +205,36 @@
     <div id="tool2" class="container">
         <div class="tools">
             <div class="tool">
-                <h3>工具 2</h3>
-                <p>工具 2 的描述。</p>
+                <h3>离线安装</h3>
+                <div class="inputs">
+                    <div class="input-group">
+                        <input id="offlineInput1" type="text" placeholder="应用名">
+                    </div>
+                    <div class="input-group file-input-wrapper">
+                        <label for="iconInput">上传图标</label>
+                        <input id="iconInput" type="file" class="file-input" accept="image/*">
+                        <!-- 用于显示文件名 -->
+                        <span id="iconFileName"></span>
+                    </div>
+                    <div class="input-group file-input-wrapper">
+                        <label for="siteInput">上传网站</label>
+                        <input id="siteInput" type="file" class="file-input">
+                        <!-- 用于显示文件名 -->
+                        <span id="siteFileName"></span>
+                    </div>
+                    <div class="input-group">
+                        <button onclick="OfflineSetup()">安装</button>
+                    </div>
+                </div>
+                <div id="output" class="output"></div>
             </div>
         </div>
-    </div>
-    <div id="tool3" class="container">
-        <div class="tools">
-            <div class="tool">
-                <h3>工具 3</h3>
-                <p>工具 3 的描述。</p>
-            </div>
-        </div>
-    </div>
+    </div>    
     <script>
         function showTool(toolId) {
+            // 隐藏作者信息
+            document.getElementById('author').style.display = 'none';
+            
             // 隐藏所有工具容器
             var containers = document.querySelectorAll('.container');
             containers.forEach(container => {
@@ -193,17 +245,81 @@
             document.getElementById(toolId).style.display = 'block';
         }
 
-    function Setup() {
-    var input1 = document.getElementById('input1').value;
-    var input2 = document.getElementById('input2').value;
-    var input3 = document.getElementById('input3').value;
-    const textArea = document.createElement("textarea");
-    textArea.value = `{"Api":"FloaOSapi","Type":"Download","Data":{"Name": "${input1}.app","Content":{"Name":"${input1}","Author":"${input1}","Icon":"${input2}","Source":"${input3}"}}}` ;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textArea);
+
+        function Setup() {
+            var input1 = document.getElementById('input1').value;
+            var input2 = document.getElementById('input2').value;
+            var input3 = document.getElementById('input3').value;
+            const textArea = document.createElement("textarea");
+            textArea.value = `{"Api":"FloaOSapi","Type":"Download","Data":{"Name": "${input1}.app","Content":{"Name":"${input1}","Author":"${input1}","Icon":"${input2}","Source":"${input3}"}}}`;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+        }
+
+        document.getElementById('iconInput').addEventListener('change', function() {
+    var fileName = this.value.split("\\").pop();
+    document.getElementById('iconFileName').textContent = fileName ? '已选择文件: ' + fileName : '';
+});
+
+document.getElementById('siteInput').addEventListener('change', function() {
+    var fileName = this.value.split("\\").pop();
+    document.getElementById('siteFileName').textContent = fileName ? '已选择文件: ' + fileName : '';
+});
+
+        
+        function convertToDataURL(file, callback) {
+    const reader = new FileReader();
+    reader.onloadend = function() {
+        callback(reader.result);
+    };
+    reader.readAsDataURL(file);
+        }
+
+        function OfflineSetup() {
+    var input1 = document.getElementById('offlineInput1').value;
+    var iconFile = document.getElementById('iconInput').files[0];
+    var siteFile = document.getElementById('siteInput').files[0];
+
+    if (!input1) {
+        alert('请填写应用名');
+        return;
+    }
+
+    if (!iconFile || !siteFile) {
+        alert('请上传图标和网站文件');
+        return;
+    }
+
+    function convertAndSetup() {
+        var iconURL, siteURL;
+        
+        function checkAndSetup() {
+            if (iconURL && siteURL) {
+                const textArea = document.createElement("textarea");
+                textArea.value = `{"Api":"FloaOSapi","Type":"Download","Data":{"Name": "${input1}.app","Content":{"Name":"${input1}","Author":"${input1}","Icon":"${iconURL}","Source":"${siteURL}"}}}`;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+            }
+        }
+
+        convertToDataURL(iconFile, function(dataURL) {
+            iconURL = dataURL;
+            checkAndSetup();
+        });
+
+        convertToDataURL(siteFile, function(dataURL) {
+            siteURL = dataURL;
+            checkAndSetup();
+        });
+    }
+
+    convertAndSetup();
 }
+
     </script>
 </body>
 </html>
